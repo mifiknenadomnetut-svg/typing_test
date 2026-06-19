@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Тест скорости печати</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="container">
+
+  <!-- Блок выбора уровня сложности -->
+  <div id="level-selection">
+      <h2>Выберите уровень сложности:</h2>
+      <form id="difficulty-form">
+          <label><input type="radio" name="level" value="easy" checked> Легкий</label>
+          <label><input type="radio" name="level" value="medium"> Средний</label>
+          <label><input type="radio" name="level" value="hard"> Сложный</label>
+          <br><br>
+          <button type="submit">Начать тест</button>
+      </form>
+      <a href="/history" class="history-link">История</a>
+  </div>
+
+  <!-- Полноэкранный оверлей -->
+  <div id="overlay" class="hidden"></div>
+
+  <!-- Блок самого теста -->
+  <div id="test-container">
+      <h2>Тест скорости печати</h2>
+
+      <div id="countdown" class="hidden">3... 2... 1... Старт!</div>
+
+      <div id="text-container" class="hidden">
+          <p id="source-text"></p>
+          <textarea id="user-input" autofocus disabled></textarea>
+      </div>
+
+      <div id="result" class="hidden">
+          <p>Тест завершен!</p>
+          <p>Скорость: <span id="wpm"></span> зн/мин</p>
+          <p>Точность: <span id="accuracy"></span>%</p>
+          <button onclick="location.reload()">Заново</button>
+          <a href="/history" class="history-link">История</a>
+      </div>
+  </div>
+
+</div>
+
+<script>
+// --- Переменные ---
+const userInputEl = document.getElementById('user-input');
+const sourceTextEl = document.getElementById('source-text');
+const resultEl = document.getElementById('result');
+const wpmEl = document.getElementById('wpm');
+const accuracyEl = document.getElementById('accuracy');
+let startTime;
+let originalText = '';
+let spansArray = []; // Массив для хранения span-элементов
+
+// Счетчики статистики
+let totalTypedChars = 0; // Каждый введенный символ (кроме Backspace)
+let totalErrors = 0;      // Количество неверно введенных символов
+
+// --- Обработка выбора уровня и старта ---
+document.getElementById('difficulty-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const level = document.querySelector('input[name="level"]:checked').value;
+    document.getElementById('level-selection').style.display = 'none';
+    document.getElementById('test-container').style.display = 'block';
+
+    const response = await fetch(`/start_test?level=${level}`);
+    const data = await response.json();
+    originalText = data.text;
+
+    // Подготавливаем текст: оборачиваем каждый символ в span
+    sourceTextEl.innerHTML = '';
+    spansArray = [];
+    for (let char of originalText) {
+        const span = document.createElement('span');
+        span.textContent = char;
+        sourceTextEl.appendChild(span);
+        spansArray.push(span);
+    }
+
+    startCountdown();
+});
+
+// --- Визуальный отсчет ---
+function startCountdown() {
+    userInputEl.disabled = true;
+    const countdownEl = document.getElementById('countdown');
+    const overlay = document.getElementById('overlay');
+
+    overlay.classList.remove('hidden');
+    countdownEl.classList.remove('hidden');
+
+    let count = 3;
+    countdownEl.textContent = count;
+
+    const timer = setInterval(() => {
+        count--;
+        if (count > 0) {
+            countdownEl.textContent = count;
+        } else {
+            clearInterval(timer);
+            overlay.classList.add('hidden');
+            countdownEl.classList.add('hidden');
+
+            // Начинаем тест!
+            document.getElementById('text-container').classList.remove('hidden');
+            startTime = Date.now();
+            userInputEl.disabled = false;
+            userInputEl.focus();
+            userInputEl.addEventListener('input', handleInput);
+        }
+    }, 1000);
+}
+
+// --- Логика теста ---
+function handleInput() {
+    const userValue = userInputEl.value;
+    const currentLength = userValue.length;
+
+    // Проверяем только последний введенный символ
+    if (currentLength > 0) {
+        const lastIndex = currentLength - 1;
+        const lastTypedChar = userValue[lastIndex];
+        const originalChar = originalText[lastIndex];
+        const targetSpan = spansArray[lastIndex];
+
+        // --- ПОДСЧЕТ СТАТИСТИКИ ---
+        totalTypedChars++; // Считаем каждый ввод
+
+        if (lastTypedChar !== originalChar) {
+            totalErrors++; // Засчитываем ошибку, если символ неверный
+            targetSpan.className = 'error'; // Подсветка: красный
+        } else {
+            targetSpan.className = 'correct'; // Подсветка: зеленый
+        }
+    }
+
+    // Проверка на завершение теста
+    if (userValue.length === originalText.length) {
+        endTest();
+    }
+}
+
+function endTest() {
+    userInputEl.removeEventListener('input', handleInput);
+    userInputEl.disabled = true;
+
+    const endTime = Date.now();
+    const timeSec = (endTime - startTime) / 1000;
+
+    // Расчет скорости (CPS - знаков в минуту)
+    const cps = timeSec > 0 ? Math.round((totalTypedChars / timeSec) * 60) : 0;
+
+    // Расчет точности: (Всего символов - Ошибки) / Всего символов
+    const accuracy = totalTypedChars > 0 ? Math.round(((totalTypedChars - totalErrors) / totalTypedChars) * 100) : 100;
+
+    wpmEl.textContent = cps;
+    accuracyEl.textContent = accuracy;
+
+    resultEl.classList.remove('hidden');
+
+     fetch('/submit_result', {
+         method: 'POST',
+         headers: {'Content-Type': 'application/json'},
+         body: JSON.stringify({wpm: cps, accuracy, time: timeSec.toFixed(2), text: originalText})
+     });
+}
+</script>
+</body>
+</html>

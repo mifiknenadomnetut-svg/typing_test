@@ -1,0 +1,50 @@
+/* Базовые стили */
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#1e1e1e; color:#f0f0f0; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+.container { text-align:center; width:90%; max-width:800px; }
+.history-link { color:#95a5a6; text-decoration:none; font-weight:bold; display:block; margin-top:15px; }
+.history-link:hover { text-decoration:underline; }
+.hidden { display:none !important; }
+button { padding:12px 25px; font-size:inherit; cursor:pointer; border-radius:5px; border:none; background:#3498db; color:white; transition: background-color 0.3s; }
+button:hover { background:#2980b9; }
+#result button { margin-top:2.5rem; }
+
+
+/* Стили для страницы теста */
+#test-container { position:relative; }
+#text-container { margin-top:2rem; }
+#user-input {
+   width:100%;
+   height:80px;
+   font-size:2rem;
+   padding:1rem;
+   border-radius:8px;
+   border:none;
+   background:#333333;
+   color:inherit;
+   outline:none;
+}
+#user-input:focus { background:#444444; }
+#countdown { font-size:5rem !important; color:#f1c40f; font-weight:bold;}
+#result p { font-size:1.8rem; margin-bottom:.5rem; }
+
+
+/* НОВЫЕ СТИЛИ ДЛЯ ПОДСВЕТКИ */
+#source-text {
+   font-size:2.2rem;
+   line-height:1.4;
+   white-space:pre-wrap;
+   word-wrap:break-word;
+   user-select:none;
+}
+#source-text span {
+   display:inline-block;
+   min-width:1ch;
+}
+.correct {
+   color: #27ae60 !important; /* Зеленый */
+}
+.error {
+   color: #e74c3c !important; /* Красный */
+   text-decoration: line-through !important; /* Перечеркнутый */
+}

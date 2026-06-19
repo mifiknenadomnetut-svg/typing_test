@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Тест скорости печати{% endblock %}
+
+{% block content %}
+<div id="countdown" class="hidden">3... 2... 1... Старт!</div>
+<div id="text-container" class="hidden">
+    <p id="source-text"></p>
+    <textarea id="user-input" autofocus></textarea>
+    <div id="result" class="hidden">
+        <p>Тест завершен!</p>
+        <p>Скорость: <span id="wpm"></span> зн/мин</p>
+        <p>Точность: <span id="accuracy"></span>%</p>
+        <button onclick="location.reload()">Заново</button>
+    </div>
+</div>
+{% endblock %}

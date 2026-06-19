@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1>Ваша история</h1>
+
+    {% if history %}
+    <table class="history-table">
+        <thead>
+            <tr>
+                <th>Дата и время</th>
+                <th>Текст</th>
+                <th>Скорость (WPM)</th>
+                <th>Точность (%)</th>
+                <th>Время (сек)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in history %}
+            <tr>
+                <td>{{ row['timestamp'] }}</td>
+                <td>{{ row['text'] }}</td>
+                <td>{{ row['wpm'] }}</td>
+                <td>{{ row['accuracy'] }}</td>
+                <td>{{ "%.2f"|format(row['time_sec']) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Ваша история пока пуста. Пройдите тест!</p>
+    {% endif %}
+
+    <a href="/">← Вернуться к тесту</a>
+</div>
+{% endblock %}
